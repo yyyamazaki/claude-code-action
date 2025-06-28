@@ -113,8 +113,18 @@ runs:
         echo "Installing Claude Code version: $CLAUDE_CODE_VERSION"
         npm install -g claude-code@$CLAUDE_CODE_VERSION
         
+        # npmのグローバルbinディレクトリをPATHに追加
+        NPM_BIN_DIR="$(npm config get prefix)/bin"
+        export PATH="$NPM_BIN_DIR:$PATH"
+        echo "PATH=$PATH" >> $GITHUB_ENV
+        
+        # インストール場所を確認
+        echo "NPM global bin directory: $NPM_BIN_DIR"
+        echo "Looking for claude binary..."
+        ls -la "$NPM_BIN_DIR" | grep claude || true
+        
         echo "Verifying installation..."
-        claude --version
+        claude --version || (echo "Claude command not found in PATH" && exit 1)
         echo "::endgroup::"
 
     - name: Install Dependencies
