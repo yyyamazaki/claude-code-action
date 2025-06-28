@@ -73,6 +73,11 @@ inputs:
     description: "Timeout in minutes for execution"
     required: false
     default: "30"
+  
+  claude_code_version:
+    description: "Claude Code version to install (default: latest)"
+    required: false
+    default: "latest"
 
 outputs:
   execution_file:
@@ -86,6 +91,31 @@ runs:
       uses: oven-sh/setup-bun@v2
       with:
         bun-version: 1.2.11
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install/Update Claude Code
+      shell: bash
+      run: |
+        echo "::group::Claude Code Setup"
+        echo "Checking current Claude Code version..."
+        if command -v claude &> /dev/null; then
+          CURRENT_VERSION=$(claude --version 2>&1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || echo "unknown")
+          echo "Current Claude Code version: $CURRENT_VERSION"
+        else
+          echo "Claude Code not installed"
+        fi
+        
+        CLAUDE_CODE_VERSION="${{ inputs.claude_code_version }}"
+        echo "Installing Claude Code version: $CLAUDE_CODE_VERSION"
+        npm install -g claude-code@$CLAUDE_CODE_VERSION
+        
+        echo "Verifying installation..."
+        claude --version
+        echo "::endgroup::"
 
     - name: Install Dependencies
       shell: bash
